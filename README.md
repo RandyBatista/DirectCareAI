@@ -1,1 +1,3 @@
 # DirectCareAI
+
+.venv\Scripts\activate
