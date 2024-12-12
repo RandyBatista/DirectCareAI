@@ -8,11 +8,6 @@ from datetime import datetime
 app = FastAPI()
 router = APIRouter()
 
-# Test backend works
-# @app.get('/')
-# async def example():
-#    return {"message": "Hello, world!"}
-
 
 @router.get("/")
 async def get_post():
