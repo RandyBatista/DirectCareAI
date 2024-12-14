@@ -1,0 +1,63 @@
+services:
+  client:
+    build:
+      context: . # Root directory (where the Dockerfile is located)
+      dockerfile: Dockerfile # Ensure the correct Dockerfile is used
+      target: frontend
+    ports:
+      - '3000:3000' # Frontend will be available on port 3000
+    volumes:
+      - ./client:/app # Mount the client folder to the container (for live development)
+    working_dir: /app
+    command: npm start # This will run `npm start` inside the frontend container
+    environment:
+      - NODE_ENV=development # Set any necessary environment variables for development
+
+  server:
+    build:
+      context: . # Root directory (where the Dockerfile is located)
+      dockerfile: Dockerfile # Ensure the correct Dockerfile is used
+      target: backend
+    ports:
+      - '8000:8000' # Backend will be available on port 8000
+    volumes:
+      - ./server:/app # Mount the server folder to the container (for live development)
+    working_dir: /app
+    command: python server.py # This will run your backend development server
+    environment:
+      - NODE_ENV=development # Set any necessary environment variables for development
+      - MONGO_URI=${MONGO_URI} # Use the MongoDB URI from the .env file
+    depends_on:
+      - client # Ensure frontend is started before backend (if required)
+      - mongodb # Ensure MongoDB is started before the backend
+
+  mongodb:
+    image: mongo # Use the latest stable MongoDB image
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME} # Root username from the .env file
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD} # Root password from the .env file
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_USER: ${MONGO_INITDB_USER}
+      MONGO_INITDB_PWD: ${MONGO_INITDB_PWD}
+      MONGO_URI: ${MONGO_URI}
+    ports:
+      - '27017:27017' # MongoDB will be available on port 27017
+    volumes:
+      - mongo-data:/data/db
+    container_name: DirectCare-Mongo-Container
+
+  nginx:
+    build:
+      context: . # Root directory (where the Dockerfile is located)
+      dockerfile: Dockerfile # Ensure the correct Dockerfile is used
+      target: nginx
+    ports:
+      - '80:80' # Nginx will be available on port 80
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+    depends_on: # Ensure frontend & backend is started before backend (if required)
+      - client
+      - server
+
+volumes:
+  mongo-data:

@@ -1,3 +1,30 @@
+# Setting Up Client
+
+---
+
+## Prerequisites
+
+Before starting, ensure you have the following installed on your system:
+
+- **Node.js** (for running `npm`)
+- **Git** (for cloning the repository)
+- **Terminal**:
+  - **Windows**: PowerShell or Command Prompt
+  - **Linux/macOS**: Bash or compatible terminal
+
+---
+
+## Steps to Set Up the Project
+
+### 1. Run Scripts
+
+Run the following command to clone the project repository and navigate to the directory:
+
+## run the start script command line on the system of your choice
+
+start.ps1 -> Windows PowerShell
+start.sh -> Linux Shell
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
