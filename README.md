@@ -5,6 +5,7 @@
 Ensure you have the following installed on your system before starting:
 
 - **Git** (for cloning the repository)
+- **Docker**
 - **Terminal**:
   - **Windows**: PowerShell or Command Prompt
   - **Linux/macOS**: Bash or compatible terminal
