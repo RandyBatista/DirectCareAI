@@ -49,4 +49,4 @@ docker build -t your-image-name .
 
 # .: This specifies the build context, which is the current directory. Docker will look for a Dockerfile in this directory.
 
-TODO: Set up volumes on docker-compose for file sharing between the host machine and the container, Persist data even after the container is stopped or deleted, and Develop and test your application on your local machine, while still using a containerized environment.
+TODO: Set up volumes on docker-compose for file sharing between the host machine and the container, Persist data even after the container is stopped or deleted, and Develop and test your application on your local machine, while still using a containerized environment
