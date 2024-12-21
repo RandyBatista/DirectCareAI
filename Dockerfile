@@ -44,8 +44,9 @@ EXPOSE 27017
 FROM nginx:alpine AS nginx
 # Copy React build files from the frontend stage to Nginx's HTML directory
 COPY --from=frontend /app/client/build /usr/share/nginx/html
-# Copy the custom Nginx configuration for reverse proxy (if you have one)
-COPY nginx/nginx.conf /app/nginx/nginx.conf 
+# Copy the custom Nginx configurations for both development and production
+COPY nginx/nginx.dev.conf /etc/nginx/conf.d/default.conf
+COPY nginx/nginx.prod.conf /etc/nginx/conf.d/default.conf
 # Expose Nginx port
 EXPOSE 80
 # Start Nginx in the background
