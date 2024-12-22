@@ -21,7 +21,7 @@
 		"build": "react-scripts build",
 		"test": "react-scripts test --watchAll",
 		"eject": "react-scripts eject",
-		"clean": "rimraf build node_modules",
+		"clean": "rimraf build node_modules package-lock.json",
 		"docker:build:start": "docker-compose -f ../docker-compose.yml up --build -d",
 		"docker:down": "docker-compose -f ../docker-compose.yml down",
 		"docker:restart": "npm run docker:down && npm run docker:build:start",

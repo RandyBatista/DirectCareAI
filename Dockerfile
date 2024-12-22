@@ -58,7 +58,7 @@ EXPOSE 80
 FROM nginx:alpine AS nginx
 
 # Copy the React build files from the frontend build stage
-COPY --from=frontend /app/build /usr/share/nginx/html
+COPY --from=client /app/client/build /usr/share/nginx/html
 
 # Copy the custom Nginx configuration from the 'conf' stage
 COPY --from=conf /etc/nginx/nginx.conf /etc/nginx/nginx.conf

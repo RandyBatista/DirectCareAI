@@ -39,7 +39,7 @@ if (-not (Test-Path $envFile)) {
 # 2.3Build the Docker image for the project
 # ------------------------------------------------------------------------------ 
 
-Set-Location .\client 
+Set-Location ./client 
 Write-Host "Cleaning Up Step" -ForegroundColor Cyan
 npm run clean
 npm run docker:clean
@@ -57,7 +57,7 @@ docker build -t farm-stack/directcare-chatbot:1.0 .
 # Install npm dependencies for the client-side application
 # ------------------------------------------------------------------------------ 
 
-Set-Location .\client
+Set-Location ./client
 
 Write-Host "Installing npm dependencies for the client..." -ForegroundColor Cyan
 npm install  # Install npm dependencies
@@ -69,7 +69,7 @@ Set-Location ..  # Return to the root directory
 # STEP 5: Set up Python virtual environment for the server 
 # ------------------------------------------------------------------------------ 
 
-Set-Location .\server  # Navigate to the server directory
+Set-Location ./server  # Navigate to the server directory
 
 # Create a Python virtual environment and install required dependencies
 Write-Host "Setting up Python virtual environment for the server..." -ForegroundColor Cyan
@@ -85,7 +85,7 @@ Set-Location ..  # Go back to the root directory
 
 # Run the secondary setup script 'run.ps1' located in the Scripts folder
 Write-Host "Running secondary setup script 'run.ps1'..." -ForegroundColor Cyan
-./Scripts/run.sh
+./Scripts/run.ps1
 
 # ------------------------------------------------------------------------------ 
 # STEP 7: Provide feedback based on the exit status of the script 
