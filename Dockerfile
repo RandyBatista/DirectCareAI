@@ -1,7 +1,7 @@
 ## Stage 1: Build React app
 
 # Use the official Node.js runtime as the base image
-FROM node:22.12.0 AS frontend
+FROM node:18-alpine AS client
 # Set working directory for frontend
 WORKDIR /app/client
 # Copy package*.json to the working directory
@@ -16,7 +16,7 @@ RUN npm run build || { echo "Build failed"; exit 1; }
 ## Stage 2: Build FastAPI app (Backend)
 
 # Use the official latest Python 3 stable version runtime as the base image
-FROM python:3 AS backend
+FROM python:3 AS server
 # Set working directory for backend
 WORKDIR /app/server
 # Copy and install FastAPI dependencies to container
@@ -38,16 +38,34 @@ RUN apt-get -y install python3.7-dev
 RUN pip3 install pymongo
 EXPOSE 27017
 
-## Stage 4: Serve with Nginx
+# Stage 2: Nginx configuration stage
+FROM nginx:alpine AS conf
 
-# Use the official nginx image as the base image
-FROM nginx:alpine AS nginx
-# Copy React build files from the frontend stage to Nginx's HTML directory
-COPY --from=frontend /app/client/build /usr/share/nginx/html
-# Copy the custom Nginx configurations for both development and production
-COPY nginx/nginx.dev.conf /etc/nginx/conf.d/default.conf
-COPY nginx/nginx.prod.conf /etc/nginx/conf.d/default.conf
+# Copy the custom Nginx configuration with correct paths
+COPY conf/nginx.conf /etc/nginx/nginx.conf
+COPY conf/conf.d/nginx.dev.conf /etc/nginx/conf.d/nginx.dev.conf
+COPY conf/conf.d/nginx.prod.conf /etc/nginx/conf.d/nginx.prod.conf
+COPY conf/conf.d/proxy.dev.conf /etc/nginx/conf.d/proxy.dev.conf
+COPY conf/conf.d/proxy.prod.conf /etc/nginx/conf.d/proxy.prod.conf
+
+# Ensure logs directory exists in the container where Nginx expects it
+RUN mkdir -p /var/log/nginx && touch /var/log/nginx/access.log /var/log/nginx/error.log
+
 # Expose Nginx port
 EXPOSE 80
+
+# Stage 3: Final Nginx serving stage
+FROM nginx:alpine AS nginx
+
+# Copy the React build files from the frontend build stage
+COPY --from=frontend /app/build /usr/share/nginx/html
+
+# Copy the custom Nginx configuration from the 'conf' stage
+COPY --from=conf /etc/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --from=conf /etc/nginx/conf.d /etc/nginx/conf.d
+
+# Expose Nginx port
+EXPOSE 80
+
 # Start Nginx in the background
 CMD ["nginx", "-g", "daemon off;"]

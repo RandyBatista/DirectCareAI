@@ -3,7 +3,7 @@ services:
     build:
       context: . # Root directory (where the Dockerfile is located)
       dockerfile: Dockerfile # Ensure the correct Dockerfile is used
-      target: frontend
+      target: client
     ports:
       - '3000:3000' # Frontend will be available on port 3000
     volumes:
@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: backend
+      target: server
     ports:
       - '8000:8000'
     volumes:
@@ -43,22 +43,24 @@ services:
       - '27017:27017' # mongodb will be available on port 27017
     volumes:
       - mongo-data:/data/db
-    container_name: DirectCare-Mongo-Container
+    container_name: Mongo-Container
 
-nginx:
-  build:
-    context: . # Root directory (where the Dockerfile is located)
-    dockerfile: Dockerfile # Ensure the correct Dockerfile is used
-    target: nginx
-  ports:
-    - '80:80' # Nginx will be available on port 80
-  volumes:
-    - ./nginx:/etc/nginx/conf.d/
-  depends_on:
-    - client
-    - server
-  environment:
-    - NGINX_ENV=${NGINX_ENV} # Takes .env variable for DEV/PROD
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: conf
+    ports:
+      - '80:80'
+    volumes:
+      - ./conf:/etc/nginx/conf
+      - ./conf/logs:/var/log/nginx
+    environment:
+      - NGINX_ENV=${NGINX_ENV}
+      - NODE_ENV=${NODE_ENV}
+    depends_on:
+      - client
+      - server
 
 volumes:
   mongo-data:
