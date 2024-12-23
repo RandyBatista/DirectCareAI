@@ -19,27 +19,27 @@ $serverName = "DirectCareDB"
 # Function to set permissions for directories
 function Set-DirectoryPermissions {
     param ([string]$path)
-    Write-Host "Setting permissions for $path..." -ForegroundColor Cyan
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): Setting permissions for $path..." -ForegroundColor Cyan
     icacls $path /grant:r "Everyone:(OI)(CI)M" /T
 }
 
 # Function to download NGINX with error handling
 function Download-Nginx {
 
-    Write-Host "Downloading NGINX from $nginxURL to $nginxDownloadPath..." -ForegroundColor Cyan
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): Downloading NGINX from $nginxURL to $nginxDownloadPath..." -ForegroundColor Cyan
     
     try {
         # Remove existing file if it exists
         if (Test-Path -Path $nginxDownloadPath) {
-            Write-Host "Existing file found at $nginxDownloadPath. Removing it..." -ForegroundColor Yellow
+            Write-Host "Line $($MyInvocation.ScriptLineNumber): Existing file found at $nginxDownloadPath. Removing it..." -ForegroundColor Yellow
             Remove-Item -Path $nginxDownloadPath -Force
         }
 
         # Download the file
         Invoke-WebRequest -Uri $nginxURL -OutFile $nginxDownloadPath -ErrorAction Stop
-        Write-Host "Download completed: $nginxDownloadPath" -ForegroundColor Green
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Download completed: $nginxDownloadPath" -ForegroundColor Green
     } catch {
-        Write-Host "Failed to download NGINX: $_" -ForegroundColor Red
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Failed to download NGINX: $_" -ForegroundColor Red
         Write-Error "Error downloading NGINX: $_"
         exit 1
     }
@@ -50,11 +50,11 @@ function Extract-Nginx {
     try {
 
         # For Debugging
-        Write-Host "nginxDownloadPath: $nginxDownloadPath" -ForegroundColor Magenta
-        Write-Host "nginxExtractPath: $nginxExtractPath" -ForegroundColor Magenta
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): nginxDownloadPath: $nginxDownloadPath" -ForegroundColor Magenta
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): nginxExtractPath: $nginxExtractPath" -ForegroundColor Magenta
 
 
-        Write-Host "Extracting NGINX..." -ForegroundColor Cyan
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Extracting NGINX..." -ForegroundColor Cyan
         Expand-Archive -Path $nginxDownloadPath -DestinationPath $nginxExtractPath -Force -ErrorAction Stop
         
         $expectedFolderName = "nginx-$nginxVersion"
@@ -63,30 +63,30 @@ function Extract-Nginx {
                         Where-Object { $_.PSIsContainer -and $_.Name -eq $expectedFolderName }
 
         if ($null -eq $nginxExtractedFolder) {
-            Write-Host "Error: Could not find the extracted folder." -ForegroundColor Red
+            Write-Host "Line $($MyInvocation.ScriptLineNumber): Error: Could not find the extracted folder." -ForegroundColor Red
             exit 1
         }
 
-        Write-Host "nginxExtractedFolder: $($nginxExtractedFolder.FullName)" -ForegroundColor Magenta
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): nginxExtractedFolder: $($nginxExtractedFolder.FullName)" -ForegroundColor Magenta
 
         # Delete the existing 'nginx' folder if it exists
-        Write-Host "Checking if 'nginx' folder exists" -ForegroundColor Green
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Checking if 'nginx' folder exists" -ForegroundColor Green
         if (Test-Path -Path "$nginxExtractPath\nginx") {
-            Write-Host "Existing 'nginx' folder found, deleting it..." -ForegroundColor Yellow
+            Write-Host "Line $($MyInvocation.ScriptLineNumber): Existing 'nginx' folder found, deleting it..." -ForegroundColor Yellow
             Remove-Item -Path "$nginxExtractPath\nginx" -Recurse -Force
         }
-        Write-Host "Existing 'nginx' folder deleted" -ForegroundColor Green
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Existing 'nginx' folder deleted" -ForegroundColor Green
 
         
          # Rename the extracted folder to the target path
         Rename-Item -Path $nginxExtractedFolder.FullName -NewName 'nginx' -Force
         $nginxExtractedPath = Join-Path -Path $nginxExtractPath -ChildPath 'nginx'
 
-        Write-Host "NGINX renamed from $directoryPath-$nginxVersion to: $nginxExtractedPath" -ForegroundColor Green
-        Write-Host "NGINX extracted to: $nginxExtractedPath" -ForegroundColor Green
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): NGINX renamed from $directoryPath-$nginxVersion to: $nginxExtractedPath" -ForegroundColor Green
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): NGINX extracted to: $nginxExtractedPath" -ForegroundColor Green
 
          # Log extracted files for debugging
-        Write-Host "Files in the extracted folder:"
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Files in the extracted folder:"
         Get-ChildItem -Path $nginxExtractedPath -Recurse | Format-Table Name,FullName
     }
     catch {
@@ -104,7 +104,7 @@ $logFormat = @"
 
 # Function to create NGINX configuration files
 function Create-ConfigFiles {
-    Write-Host "Creating NGINX configuration files for Dev and Prod environments..." -ForegroundColor Cyan
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): Creating NGINX configuration files for Dev and Prod environments..." -ForegroundColor Cyan
     
     # Development Configuration
     $devConf = @"
@@ -192,43 +192,33 @@ http {
 
 # Function to configure NGINX with the dev configuration by default
 function Configure-Nginx {
-    Write-Host "Configuring NGINX with Development environment..." -ForegroundColor Cyan
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): Configuring NGINX with Development environment..." -ForegroundColor Cyan
     Copy-Item -Path $devConfPath -Destination $nginxConfPath -Force
     icacls $nginxConfPath /grant:r "Everyone:(M)"
 }
 
-# Main execution flow
-$retries = 0
-$maxRetries = 1
+Download-Nginx
+Extract-Nginx
+Create-ConfigFiles
+Configure-Nginx
 
-while ($retries -lt $maxRetries) {
-    Download-Nginx
-    Extract-Nginx
-    Create-ConfigFiles
-    Configure-Nginx
-
-    $nginxExtractedPath = "$nginxExtractPath\nginx"
-    if (Test-Path -Path "$nginxExtractedPath\nginx.exe") {
-        Install-NginxService
-        Write-Host "NGINX has been installed successfully on Windows." -ForegroundColor Green
-        break
-    } else {
-        Write-Host "nginx.exe not found at $nginxExtractedPath. Attempting to re-download and re-extract..." -ForegroundColor Yellow
-        $retries++
-        if ($retries -ge $maxRetries) {
-            Write-Host "nginx.exe still not found after maximum retries. Installation failed." -ForegroundColor Red
-            exit 1
-        }
-    }
+# Check if nginx.exe exists
+$nginxExtractedPath = "$nginxExtractPath\nginx"
+if (Test-Path -Path "$nginxExtractedPath\nginx.exe") {
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): NGINX has been installed successfully on Windows." -ForegroundColor Green
+} else {
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): nginx.exe not found at $nginxExtractedPath. Installation failed." -ForegroundColor Red
+    exit 1
 }
+
 
 # Change to the directory where Run-Nginx.ps1 is located or provide full path
 if (Test-Path -Path ".\Run-Nginx.ps1") {
     try {
         ./Run-Nginx.ps1
     } catch {
-        Write-Host "Error running Run-Nginx.ps1: $_" -ForegroundColor Red
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): Error running Run-Nginx.ps1: $_" -ForegroundColor Red
     }
 } else {
-    Write-Host "Run-Nginx.ps1 not found in the current directory." -ForegroundColor Red
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): Run-Nginx.ps1 not found in the current directory." -ForegroundColor Red
 }
