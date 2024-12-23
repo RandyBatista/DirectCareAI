@@ -26,15 +26,21 @@ Set-Location ..
 # 2.3 Open the FastAPI Swagger documentation page automatically in the default browser.
 # ------------------------------------------------------------------------------
 Set-Location .\server
-
 Write-Host "Activating Python virtual environment" -ForegroundColor cyan
-.\venv\Scripts\activate
+$venvPath = ".\venv\Scripts\activate"
+
+if (Test-Path $venvPath) {
+    .\venv\Scripts\activate
+} else {
+    Write-Host "Virtual environment not found at $venvPath" -ForegroundColor Red
+}
 
 Write-Host "Starting FastAPI server" -ForegroundColor cyan
-Start-Process -NoNewWindow -FilePath uvicorn -ArgumentList "server:app", "--reload" 
+Start-Process -NoNewWindow -FilePath uvicorn -ArgumentList "server:app", "--reload"
 
 Write-Host "Opening FastAPI server" -ForegroundColor cyan
 $url = "http://localhost:8000/docs"
+
 Start-Process $url
 
 Set-Location ..
@@ -48,8 +54,26 @@ Write-Host "Starting client application" -ForegroundColor Cyan
 npm run start:detached
 
 Set-Location ..
+
+# STEP 4: Update Nginx Configuration
+$env_NGINX_ENV = "dev"  # Set to "prod" for production
+$nginx_conf_path = "C:/Users/Randy_Batista/Desktop/Projects/DirectCareAI/conf/nginx.conf"
+
+if (Test-Path $nginx_conf_path) {
+    # Modify nginx.conf with the correct environment
+    $content = Get-Content $nginx_conf_path
+    $content = $content -replace "\$env_NGINX_ENV", $env_NGINX_ENV
+    $content | Set-Content $nginx_conf_path
+
+    # Reload Nginx
+    Write-Host "Reloading Nginx..." -ForegroundColor Cyan
+    nginx.exe -s reload
+} else {
+    Write-Host "nginx.conf not found at $nginx_conf_path" -ForegroundColor Red
+}
+
 # ------------------------------------------------------------------------------
-# STEP 4: Create and Run Single Docker container (Optional)
+# STEP 5: Create and Run Single Docker container (Optional)
 # 4.1 Create and Run the 'farm-stack/directcare-chatbot:1.0' Docker container in detached mode, exposing port 8000 on the host to port 8000 on the container.
 # ------------------------------------------------------------------------------
 
@@ -57,6 +81,7 @@ Set-Location ..
 # Write-Host "Creating and starting Single Docker container " -ForegroundColor cyan
 # docker run -d -p 8000:8000 farm-stack/directcare-chatbot:1.0
 
+Write-Host "Setup complete!" -ForegroundColor Green
 # ------------------------------------------------------------------------------
 # END OF SCRIPT
 # ------------------------------------------------------------------------------

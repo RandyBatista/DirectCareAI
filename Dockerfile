@@ -45,11 +45,7 @@ FROM nginx:alpine AS conf
 COPY conf/nginx.conf /etc/nginx/nginx.conf
 COPY conf/conf.d/nginx.dev.conf /etc/nginx/conf.d/nginx.dev.conf
 COPY conf/conf.d/nginx.prod.conf /etc/nginx/conf.d/nginx.prod.conf
-COPY conf/conf.d/proxy.dev.conf /etc/nginx/conf.d/proxy.dev.conf
-COPY conf/conf.d/proxy.prod.conf /etc/nginx/conf.d/proxy.prod.conf
 
-# Ensure logs directory exists in the container where Nginx expects it
-RUN mkdir -p /var/log/nginx && touch /var/log/nginx/access.log /var/log/nginx/error.log
 
 # Expose Nginx port
 EXPOSE 80

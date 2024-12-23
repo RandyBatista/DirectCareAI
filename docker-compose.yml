@@ -54,7 +54,6 @@ services:
       - '80:80'
     volumes:
       - ./conf:/etc/nginx/conf
-      - ./conf/logs:/var/log/nginx
     environment:
       - NGINX_ENV=${NGINX_ENV}
       - NODE_ENV=${NODE_ENV}
