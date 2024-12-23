@@ -197,48 +197,6 @@ function Configure-Nginx {
     icacls $nginxConfPath /grant:r "Everyone:(M)"
 }
 
-# Function to install NGINX as a Windows service using sc.exe for better control
-function Install-NginxService {
-    Write-Host "Installing NGINX as a service..." -ForegroundColor Cyan
-
-    if (Get-Service "nginx" -ErrorAction SilentlyContinue) {
-        Write-Host "nginx service already exists. Stopping and removing it..." -ForegroundColor Yellow
-        Stop-Service "nginx" -ErrorAction SilentlyContinue
-        sc.exe delete "nginx" -ErrorAction SilentlyContinue
-    }
-
-    try {
-        # Run the script with elevated privileges (if not already run as Administrator)
-        if (-not (Test-Path 'HKCU:\Environment\IsAdmin')) {
-            Write-Host "This script requires Administrator privileges. Restarting as Administrator..." -ForegroundColor Yellow
-            Start-Process powershell -Verb runAs -ArgumentList "$PSCommandPath"
-            exit
-        }
-
-        # Check if the service already exists
-        if (Get-Service "nginx" -ErrorAction SilentlyContinue) {
-            Write-Host "NGINX service already exists." -ForegroundColor Yellow
-        } else {
-            # Use sc.exe for more control over service creation
-            sc.exe create nginx binPath= "$nginxExtractedPath\nginx.exe" start= auto DisplayName= "NGINX"
-            if (Get-Service "nginx" -ErrorAction SilentlyContinue) {
-                Write-Host "NGINX service has been created successfully." -ForegroundColor Green
-            } else {
-                Write-Host "Failed to confirm NGINX service creation." -ForegroundColor Red
-                exit 1
-            }
-        }
-
-        # Set permissions for nginx.exe
-        icacls "$nginxExtractedPath\nginx.exe" /grant:r "NT AUTHORITY\SYSTEM:(RX)"
-    } catch {
-        Write-Host "Failed to create NGINX service: $_" -ForegroundColor Red
-        Write-Error "Error creating NGINX service: $_"
-    exit 1
-    }
-
-}
-
 # Main execution flow
 $retries = 0
 $maxRetries = 1
