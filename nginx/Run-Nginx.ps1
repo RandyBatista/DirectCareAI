@@ -1,6 +1,6 @@
 # Run-Nginx.ps1
-$nginxConfPath = "C:\nginx\conf\nginx.conf"
 $nginxExtractedPath = "C:\nginx"  # Assuming this variable is set in Install-Nginx.ps1
+$nginxConfPath = "C:\nginx\conf\nginx.conf"
 $devConfPath = "C:\nginx\conf\NginxDev.conf" # Correct path from Install-Nginx.ps1
 $prodConfPath = "C:\nginx\conf\NginxProd.conf" # Correct path from Install-Nginx.ps1
 
@@ -15,7 +15,7 @@ function Switch-Environment([string]$env) {
     } else {
         Write-Host "Line $($MyInvocation.ScriptLineNumber): Invalid environment specified. Use 'dev' or 'prod'." -ForegroundColor Red
     }
-    Write-Host "Line $($MyInvocation.ScriptLineNumber): Please restart NGINX to apply changes." -ForegroundColor Red
+    Write-Host "Line $($MyInvocation.ScriptLineNumber): Please restart NGINX to apply changes." -ForegroundColor Yellow
 }
 
 # Function to manage NGINX process (not service)
@@ -39,15 +39,15 @@ function Manage-NginxProcess {
     }
 }
 
-# Switch to Development environment by default
-Switch-Environment "dev"
+# Set to Development environment by default
+Switch-Environment "dev" # TODO: Change to Development environment to prod as needed.
 
 # Start NGINX process
 Manage-NginxProcess
 
 # Informational messages
 Write-Host "Line $($MyInvocation.ScriptLineNumber): Current environment is set to Development." -ForegroundColor Yellow
-Write-Host "Line $($MyInvocation.ScriptLineNumber): Visit http://localhost:80 in your browser to see your client. Use /api for server routes." -ForegroundColor Yellow
+Write-Host "Line $($MyInvocation.ScriptLineNumber): Visit http://localhost:3000 in your browser to see your client. Use /api for server routes." -ForegroundColor Yellow
 
 # Optionally, switch between Dev and Prod configurations
 Write-Host "Line $($MyInvocation.ScriptLineNumber): To switch between environments, use:" -ForegroundColor Yellow

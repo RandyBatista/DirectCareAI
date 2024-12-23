@@ -49,11 +49,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: conf
+      target: conf # Ensure we build only the conf stage (for copying config files)
     ports:
       - '80:80'
     volumes:
-      - ./conf:/etc/nginx/conf
+      - ./conf:/etc/nginx/conf # Mount local conf directory to container's /etc/nginx/conf
     environment:
       - NGINX_ENV=${NGINX_ENV}
       - NODE_ENV=${NODE_ENV}

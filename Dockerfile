@@ -41,10 +41,10 @@ EXPOSE 27017
 # Stage 2: Nginx configuration stage
 FROM nginx:alpine AS conf
 
-# Copy the custom Nginx configuration with correct paths
+# Copy the custom Nginx configuration from the local file system (generated via Install-Nginx.ps1)
 COPY conf/nginx.conf /etc/nginx/nginx.conf
-COPY conf/conf.d/nginx.dev.conf /etc/nginx/conf.d/nginx.dev.conf
-COPY conf/conf.d/nginx.prod.conf /etc/nginx/conf.d/nginx.prod.conf
+COPY conf/NginxDev.conf /etc/nginx/conf.d/nginx.dev.conf
+COPY conf/NginxProd.conf /etc/nginx/conf.d/nginx.prod.conf
 
 
 # Expose Nginx port
