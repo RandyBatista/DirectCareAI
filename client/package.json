@@ -10,7 +10,7 @@
 		"react": "^19.0.0",
 		"react-dom": "^19.0.0",
 		"react-icons": "^5.4.0",
-		"react-scripts": "5.0.1",
+		"react-scripts": "^5.0.1",
 		"web-vitals": "^4.2.4"
 	},
 	"scripts": {
@@ -21,12 +21,13 @@
 		"build": "react-scripts build",
 		"test": "react-scripts test --watchAll",
 		"eject": "react-scripts eject",
-		"clean": "rimraf build node_modules package-lock.json",
+		"clean": "rimraf build node_modules",
 		"docker:build:start": "docker-compose -f ../docker-compose.yml up --build -d",
 		"docker:down": "docker-compose -f ../docker-compose.yml down",
 		"docker:restart": "npm run docker:down && npm run docker:build:start",
 		"docker:clean": "docker-compose -f ../docker-compose.yml down && docker system prune -af",
-		"docker:logs": "docker-compose -f ../docker-compose.yml logs -f"
+		"docker:logs": "docker-compose -f ../docker-compose.yml logs -f",
+		"nginx:test": "./../nginx/conf/nginx.exe -t"
 	},
 	"eslintConfig": {
 		"extends": [
@@ -47,7 +48,6 @@
 		]
 	},
 	"devDependencies": {
-		"eslint": "^8.57.1",
 		"npm-check-updates": "^17.1.11",
 		"prettier": "^3.4.2",
 		"rimraf": "^6.0.1",
