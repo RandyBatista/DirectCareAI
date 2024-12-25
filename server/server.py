@@ -8,7 +8,6 @@ from datetime import datetime
 app = FastAPI()
 router = APIRouter()
 
-
 @router.get("/")
 async def get_post():
     try:

@@ -6,18 +6,48 @@
 # tests the NGINX configuration, and starts or stops the NGINX service based on the specified environment.
 # The script also provides a way to set up the environment and start the NGINX process with the correct settings.
 # ----------------------------------------------------------------------------------------
+Write-Host "Starting 2_Run-Nginx.ps1 Script" -ForegroundColor Cyan
+# ----------------------------------------------------------------------------------------
 # Usage:
 # 1. Make sure you are in the Scripts directory
 # 2. Run 1_Run-Nginx.ps1 in terminal
 # ---------------------------------------------------------------------------------------- 
+# Function to load .env file
+Push-Location $env:PROJECT_ROOT_DIR
+function Import-EnvFile {
+    $envFile = ".env"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            # Skip lines that are comments, empty, or don't have an =
+            if ($_ -notmatch '^#|^\s*$' -and $_.Contains('=')) {
+                $parts = $_.Split('=', 2)  # Split only on the first '='
+                $name = $parts[0].Trim()
+                $value = $parts[1].Trim()
+                
+                if ($name -and $value) {
+                    # Check if both name and value are not null or empty
+                    [Environment]::SetEnvironmentVariable($name, $value)
+                }
+                else {
+                    Write-Warning "Skipping malformed line: $_"
+                }
+            }
+        }
+    }
+    else {
+        Write-Host ".env file not found."
+    }
+}
+
+Import-EnvFile
+# ---------------------------------------------------------------------------------------- 
 # STEP 1: Define NGINX paths for extracted files, logs, and configuration
 # ----------------------------------------------------------------------------------------
 
-# Set paths for NGINX extracted directory, logs, and configuration file
-$nginxExtractedPath = "C:/Users/Randy_Batista/Desktop/Projects/DirectCareAI/nginx"
-$logsPath = "C:/Users/Randy_Batista/Desktop/Projects/DirectCareAI/nginx/logs"
-$nginxConfPath = "$nginxExtractedPath/conf/nginx.conf"
-$nginxExePath = "$nginxExtractedPath/nginx.exe"
+$nginx_directory_path = "$env:PROJECT_ROOT_DIR/nginx" # Path to the NGINX directory
+$logs_path = "$env:PROJECT_ROOT_DIR/nginx/logs"
+$nginx_conf_path = "$nginx_directory_path/conf/nginx.conf"
+$nginx_exe_path = "$nginx_directory_path/nginx.exe"
 
 # ----------------------------------------------------------------------------------------
 # STEP 2: Function to Ensure Directory Exists
@@ -36,14 +66,12 @@ function Test-DirectoryExists([string]$path) {
 # ----------------------------------------------------------------------------------------
 
 function Set-EnvironmentVariable([string]$env) {
-    if ($env -eq "dev") {
+    if ($env:NGINX_ENV -eq "dev") {
         # Check if environment is "dev"
-        $env:ENVIRONMENT = "development"  # Set environment to development
         Write-Host "Line $($MyInvocation.ScriptLineNumber): Environment set to Development." -ForegroundColor Green
     }
-    elseif ($env -eq "prod") {
+    elseif ($env:NGINX_ENV -eq "prod") {
         # Check if environment is "prod"
-        $env:ENVIRONMENT = "production"  # Set environment to production
         Write-Host "Line $($MyInvocation.ScriptLineNumber): Environment set to Production." -ForegroundColor Green
     }
     else {
@@ -59,81 +87,82 @@ function Set-EnvironmentVariable([string]$env) {
 
 function Restart-NginxProcess {
     try {
-        Ensure-DirectoryExists $logsPath  # Ensure the logs directory exists
+        Test-DirectoryExists $logs_path  # Ensure the logs directory exists
 
-        if ([string]::IsNullOrEmpty($nginxExtractedPath) -or [string]::IsNullOrEmpty($nginxConfPath)) {
-            Write-Host "Line $($MyInvocation.ScriptLineNumber): One or more paths are empty. Please check `$nginxExtractedPath and `$nginxConfPath." -ForegroundColor Red
+        if ([string]::IsNullOrEmpty($nginx_directory_path) -or [string]::IsNullOrEmpty($nginx_conf_path)) {
+            Write-Host "One or more paths are empty. Please check `$nginx_directory_path and `$nginx_conf_path." -ForegroundColor Red
             return  # Exit the function if paths are invalid
         }
 
-        if (-not (Test-Path "$nginxExePath")) {
+        if (-not (Test-Path "$nginx_exe_path")) {
             # Check if nginx.exe exists
-            Write-Host "Line $($MyInvocation.ScriptLineNumber): nginx.exe not found at $nginxExtractedPath." -ForegroundColor Red
+            Write-Host "nginx.exe not found at $nginx_directory_path." -ForegroundColor Red
             return  # Exit the function if nginx.exe is not found
         }
 
-        Push-Location $nginxExtractedPath  # Change to NGINX directory
+        Push-Location $nginx_directory_path  # Change to NGINX directory
 
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): Attempting to test NGINX configuration..." -ForegroundColor Cyan
-        $testResult = Start-Process -FilePath "$nginxExePath" -ArgumentList @("-t", "-c", "$nginxConfPath") -NoNewWindow -PassThru -Wait
+        Write-Host "Attempting to test NGINX configuration..." -ForegroundColor Cyan
+        $testResult = Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-t", "-c", "$nginx_conf_path") -NoNewWindow -PassThru -Wait
         if ($testResult.ExitCode -ne 0) {
             # Check if configuration test fails
-            Write-Host "Line $($MyInvocation.ScriptLineNumber): Configuration test failed. Please check your configuration." -ForegroundColor Red
+            Write-Host "Configuration test failed. Please check your configuration." -ForegroundColor Red
             return  # Exit if configuration test fails
         }
         else {
             # Otherwise move on
-            Write-Host "Line $($MyInvocation.ScriptLineNumber): Configuration test passed." -ForegroundColor Green
+            Write-Host "Configuration test passed." -ForegroundColor Green
         }
 
-        Start-Process -FilePath "$nginxExePath" -ArgumentList @("-s", "stop") -NoNewWindow -Wait  # Stop NGINX process
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): NGINX process stopped." -ForegroundColor Green
+        Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-s", "stop") -NoNewWindow -Wait  # Stop NGINX process
+        Write-Host "NGINX process stopped." -ForegroundColor Green
 
-        $envArg = if ($env:ENVIRONMENT -eq "development") { "-g 'env ENVIRONMENT=development;'" } else { "-g 'env ENVIRONMENT=production;'" }  # Set environment argument for NGINX
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): Starting NGINX process with environment: $envArg" -ForegroundColor Cyan
+        $envArg = "-g 'env ENVIRONMENT=$($env:NGINX_ENV);'"
+        Write-Host "Starting NGINX process with environment: $envArg" -ForegroundColor Cyan
 
-        Start-Process -FilePath "$nginxExePath" -ArgumentList @("-t", "-c", "$nginxConfPath") -Wait -NoNewWindow  # Test NGINX configuration
-        Start-Process -FilePath "$nginxExePath" -ArgumentList @("-c", "$nginxConfPath", $envArg) -WindowStyle Maximized -Wait  # Start NGINX with specified configuration
+        # Start NGINX
+        Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-c", "$nginx_conf_path", $envArg) -WindowStyle Maximized -Wait  # Start NGINX with specified configuration
 
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): NGINX process started with ENVIRONMENT=$($env:ENVIRONMENT)." -ForegroundColor Green
-
-        Pop-Location  # Return to the original directory
-
+        Write-Host "NGINX process started with ENVIRONMENT=$($env:NGINX_ENV)." -ForegroundColor Green
     }
     catch {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"  # Get the current timestamp
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): [$timestamp] An error occurred while managing the NGINX process: $_" -ForegroundColor Red
+        Write-Host "[$timestamp] Error occurred while managing NGINX process: $_" -ForegroundColor Red
+    }
+    finally {
+        Pop-Location  # Return to the original directory
     }
 }
 
 # ----------------------------------------------------------------------------------------
 # STEP 5: Set Environment to Development by Default and Start NGINX Process
-#       TODO: Set Set-EnvironmentVariable to 'dev'/'prod' as needed
 # ----------------------------------------------------------------------------------------
 
-Set-EnvironmentVariable "dev"
+Set-EnvironmentVariable $env:NGINX_ENV
 Restart-NginxProcess
 
 # ----------------------------------------------------------------------------------------
 # STEP 6: Display Information to the User
 # ----------------------------------------------------------------------------------------
 
-Write-Host "Line $($MyInvocation.ScriptLineNumber): Current environment is set to $($env:ENVIRONMENT)." -ForegroundColor Yellow
-Write-Host "Line $($MyInvocation.ScriptLineNumber): Visit http://localhost:3000 in your browser to see your client. Use http://localhost:8000/api for server routes." -ForegroundColor Yellow
+Write-Host "Line $($MyInvocation.ScriptLineNumber): Current environment is set to $($env:NGINX_ENV)." -ForegroundColor Yellow
+Write-Host "Line $($MyInvocation.ScriptLineNumber): Visit $env:CLIENT_HOST in your browser to see your client. Use $env:SERVER_HOST/api for server routes." -ForegroundColor Yellow
 
 # ----------------------------------------------------------------------------------------  
 # STEP 7: Execute Additional Script Execution for Continuos Installation (Optional)
 # TODO: COMMENT/UNCOMMENT depending on installation preferences.
 # ----------------------------------------------------------------------------------------  
 
-# Push-Location C:\Users\Randy_Batista\Desktop\Projects\DirectCareAI\Scripts  # Change to STRINGS directory
-# if (Test-Path -Path "./2_project-setup.ps1") {
+# Push-Location $env:PROJECT_ROOT_DIR\Scripts  # Change to STRINGS directory
+# if (Test-Path -Path "./3_project-run.ps1") {
 #     try {
-#         ./2_project-setup.ps1
-#     } catch {
+#         ./3_project-run.ps1
+#     }
+#     catch {
 #         Write-Host "Line $($MyInvocation.ScriptLineNumber): Error running Run-Nginx.ps1: $_" -ForegroundColor Red
 #     }
-# } else {
+# }
+# else {
 #     Write-Host "Line $($MyInvocation.ScriptLineNumber): Run-Nginx.ps1 not found in the current directory." -ForegroundColor Red
 # }
 

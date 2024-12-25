@@ -5,13 +5,13 @@ services:
       dockerfile: Dockerfile # Ensure the correct Dockerfile is used
       target: client
     ports:
-      - '3000:3000' # Frontend will be available on port 3000
+      - '${CLIENT_PORT}:${CLIENT_PORT}' # Frontend will be available on port 3000
     volumes:
       - ./client:/app # Mount the client folder to the container (for live development)
     working_dir: /app
     command: npm start # This will run `npm start` inside the frontend container
     environment:
-      - NODE_ENV=${NODE_ENV} # Takes .env variable for DEV/PROD
+      - CLIENT_ENV=${CLIENT_ENV} # Takes .env variable for DEV/PROD
 
   server:
     build:
@@ -19,19 +19,21 @@ services:
       dockerfile: Dockerfile
       target: server
     ports:
-      - '8000:8000'
+      - '${SERVER_PORT}:${SERVER_PORT}'
     volumes:
       - ./server:/app
     working_dir: /app
     command: python server.py
     environment:
-      - NODE_ENV=${NODE_ENV} # Takes .env variable for DEV/PROD
+      - SERVER_ENV=${SERVER_ENV} # Takes .env variable for DEV/PROD
       - MONGO_INITDB_USER=${MONGO_INITDB_USER}
       - MONGO_INITDB_PWD=${MONGO_INITDB_PWD}
       - MONGO_URI=${MONGO_URI}
     depends_on:
       - client
       - mongodb
+    env_file:
+      - .env # Make sure the environment file is loaded
 
   mongodb:
     image: mongo
@@ -40,7 +42,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
       - MONGO_INITDB_DATABASE=${MONGO_INITDB_DATABASE}
     ports:
-      - '27017:27017' # mongodb will be available on port 27017
+      - '${MONGODB_PORT}:${MONGODB_PORT}' # mongodb will be available on port 27017
     volumes:
       - mongo-data:/data/db
     container_name: Mongo-Container
@@ -51,12 +53,11 @@ services:
       dockerfile: Dockerfile
       target: conf # Ensure we build only the conf stage (for copying config files)
     ports:
-      - '80:80'
+      - '${NGINX_PORT}:${NGINX_PORT}'
     volumes:
-      - ./conf:/etc/nginx/conf # Mount local conf directory to container's /etc/nginx/conf
+      - ./nginx/conf:/etc/nginx/conf # Mount local conf directory to container's /etc/nginx/conf
     environment:
       - NGINX_ENV=${NGINX_ENV}
-      - NODE_ENV=${NODE_ENV}
     depends_on:
       - client
       - server

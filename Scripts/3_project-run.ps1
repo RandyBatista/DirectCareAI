@@ -4,16 +4,42 @@
 # building it, activating a Python virtual environment for the server, and running 
 # a FastAPI server.
 # ----------------------------------------------------------------------------------------
+Write-Host "Starting 3_project-run.ps1 Script" -ForegroundColor Cyan
+# ----------------------------------------------------------------------------------------
 # Usage:
- # 1. Make sure you are in the Scripts directory
- # 2. Run ./3_project-run.ps1 in terminal
+# 1. Make sure you are in the Scripts directory
+# 2. Run ./3_project-run.ps1 in terminal
+# ---------------------------------------------------------------------------------------- 
+# Function to load .env file
+function Import-EnvFile {
+    $envFile = "../.env"
+    if (Test-Path $envFile) {
+        Get-Content $envFile | ForEach-Object {
+            # Skip lines that are comments, empty, or don't have an =
+            if ($_ -notmatch '^#|^\s*$' -and $_.Contains('=')) {
+                $parts = $_.Split('=', 2)  # Split only on the first '='
+                $name = $parts[0].Trim()
+                $value = $parts[1].Trim()
+                
+                if ($name -and $value) {  # Check if both name and value are not null or empty
+                    [Environment]::SetEnvironmentVariable($name, $value)
+                } else {
+                    Write-Warning "Skipping malformed line: $_"
+                }
+            }
+        }
+    } else {
+        Write-Host ".env file not found."
+    }
+}
+
+Import-EnvFile
 # ----------------------------------------------------------------------------------------
 
-$env_NGINX_ENV = "dev"  # Set to "prod" for production
-$nginx_conf_path = "C:\Users\Randy_Batista\Desktop\Projects\DirectCareAI\nginx\conf\nginx.conf"
-$nginx_nginx_dir_path = "C:\Users\Randy_Batista\Desktop\Projects\DirectCareAI\nginx"
-$project_root_dir = "C:\Users\Randy_Batista\Desktop\Projects\DirectCareAI"
-Push-Location $project_root_dir # Change to ROOT directory
+$nginx_dir_path = "$env:PROJECT_ROOT_DIR\nginx"
+$nginx_conf_path = "$nginx_dir_path\conf\nginx.conf"
+
+Push-Location $env:PROJECT_ROOT_DIR # Change to project root directory
 
 # ----------------------------------------------------------------------------------------
 # STEP 1: Navigate to the client directory
@@ -38,10 +64,10 @@ Set-Location ..
 Set-Location .\server
 Write-Host "Activating Python virtual environment" -ForegroundColor cyan
 $venvPath = ".\venv\Scripts\activate"
-
 if (Test-Path $venvPath) {
     .\venv\Scripts\activate
-} else {
+}
+else {
     Write-Host "Virtual environment not found at $venvPath" -ForegroundColor Red
 }
 
@@ -49,7 +75,7 @@ Write-Host "Starting FastAPI server" -ForegroundColor cyan
 Start-Process -NoNewWindow -FilePath uvicorn -ArgumentList "server:app", "--reload"
 
 Write-Host "Opening FastAPI server" -ForegroundColor cyan
-$url = "http://localhost:8000/docs"
+$url = "$env:SERVER_HOST/docs"
 
 Start-Process $url
 
@@ -71,15 +97,16 @@ Set-Location ..
 if (Test-Path $nginx_conf_path) {
     # Modify nginx.conf with the correct environment
     $content = Get-Content $nginx_conf_path
-    $content = $content -replace "\$env_NGINX_ENV", $env_NGINX_ENV
+    $content = $content -replace "\$env:NGINX_ENV", $env:NGINX_ENV
     $content | Set-Content $nginx_conf_path
 
     # Reload Nginx
  
     
-    Push-Location $nginx_nginx_dir_path  # Change to NGINX directory
-    if (-not (Test-Path "$nginx_nginx_dir_path")) {  # Check if nginx.exe exists
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): nginx.exe not found at $nginx_nginx_dir_path." -ForegroundColor Red
+    Push-Location $nginx_dir_path  # Change to NGINX directory
+    if (-not (Test-Path "$nginx_dir_path")) {
+        # Check if nginx.exe exists
+        Write-Host "Line $($MyInvocation.ScriptLineNumber): nginx.exe not found at $nginx_dir_path." -ForegroundColor Red
         return  # Exit the function if nginx.exe is not found
     }
     Write-Host "Line $($MyInvocation.ScriptLineNumber): Nginx Reloading ..." -ForegroundColor Cyan
@@ -89,7 +116,8 @@ if (Test-Path $nginx_conf_path) {
     ./nginx.exe -t
     Write-Host "Line $($MyInvocation.ScriptLineNumber): Nginx Tested..." -ForegroundColor Cyan
     
-} else {
+}
+else {
     Write-Host "nginx.conf not found at $nginx_conf_path" -ForegroundColor Red
 }
 
@@ -108,7 +136,7 @@ if (Test-Path $nginx_conf_path) {
 # It changes to the project root directory and confirms that the setup has been successfully completed.
 # ----------------------------------------------------------------------------------------
 
-Push-Location C:\Users\Randy_Batista\Desktop\Projects\DirectCareAI  # Change to ROOT directory
+Push-Location $env:PROJECT_ROOT_DIR  # Change to project root directory
 Write-Host "Setup completed successfully!" -ForegroundColor Green
 
 # ----------------------------------------------------------------------------------------
