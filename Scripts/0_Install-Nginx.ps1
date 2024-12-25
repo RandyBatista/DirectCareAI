@@ -5,8 +5,8 @@
 # and configuration files for development and production environments.
 # ----------------------------------------------------------------------------------------
 # Usage:
- # 1. Make sure you are in the Scripts directory
- # 2. Run ./0_Install-Nginx.ps1 in terminal
+# 1. Make sure you are in the Scripts directory
+# 2. Run ./0_Install-Nginx.ps1 in terminal
 # ---------------------------------------------------------------------------------------- 
 
 # ----------------------------------------------------------------------------------------
@@ -112,22 +112,54 @@ function Open-Nginx {
 
 # TODO: Change placeholder values accordingly to your requirements
 $placeholders = @{ 
-    nginxClientHost       = @'http://localhost:3000 '@
-    nginxServerHost       = @'http://localhost:8000 '@
-    nginxHost             = @' listen 80 '@
-    serverName            = @' DirectCareDB '@
-    logFormat             = @' log_format main  '$remote_addr - $remote_user [$time_local] "$request" ' '$status $body_bytes_sent "$http_referer" ' '"$http_user_agent" "$http_x_forwarded_for"'; '@
-    httpUpgrade           = @' $http_upgrade '@
-    Uri                   = @' $uri '@
-    hosting               = @' $host '@
-    ENVIRONMENT           = @' $ENVIRONMENT '@
-    remoteAddr            = @' $remote_addr '@
-    proxyAddXForwardedFor = @' $proxy_add_x_forwarded_for '@
-    requestUri            = @'$request_uri '@
-    httpXForwardedProto   = @' $http_x_forwarded_proto '@
-    proxyDevEndpoint      = @' $proxy_dev_endpoint '@
-    proxyApiEndpoint      = @' $proxy_api_endpoint '@
-    reactBuildDir         = @' C:/Users/Randy_Batista/Desktop/Projects/DirectCareAI/client/build '@
+    nginxClientHost       = @'
+'http://localhost:3000 
+'@
+    nginxServerHost       = @'
+http://localhost:8000 
+'@
+    nginxHost             = @' 
+    listen 80 
+'@
+    serverName            = @' 
+    DirectCareDB 
+'@
+    logFormat             = @' 
+    log_format main  '$remote_addr - $remote_user [$time_local] "$request" ' '$status $body_bytes_sent "$http_referer" ' '"$http_user_agent" "$http_x_forwarded_for"'; 
+'@
+    httpUpgrade           = @' 
+    $http_upgrade 
+'@
+    Uri                   = @' 
+    $uri 
+'@
+    hosting               = @' 
+    $host 
+'@
+    ENVIRONMENT           = @' 
+    $ENVIRONMENT 
+'@
+    remoteAddr            = @' 
+    $remote_addr 
+'@
+    proxyAddXForwardedFor = @' 
+    $proxy_add_x_forwarded_for 
+'@
+    requestUri            = @'
+$request_uri 
+'@
+    httpXForwardedProto   = @' 
+    $http_x_forwarded_proto 
+'@
+    proxyDevEndpoint      = @' 
+    $proxy_dev_endpoint 
+'@
+    proxyApiEndpoint      = @' 
+    $proxy_api_endpoint 
+'@
+    reactBuildDir         = @' 
+    C:/Users/Randy_Batista/Desktop/Projects/DirectCareAI/client/build 
+'@
 }
 
 # TODO: Modify commonHeaders placeholders according to your project/requirements
@@ -278,7 +310,7 @@ else {
 
 # ----------------------------------------------------------------------------------------  
 # STEP 8: Execute Additional Script Execution for Continuos Installation (Optional)
-        # TODO: COMMENT/UNCOMMENT depending on installation preferences.
+# TODO: COMMENT/UNCOMMENT depending on installation preferences.
 # ----------------------------------------------------------------------------------------  
 
 # Push-Location C:\Users\Randy_Batista\Desktop\Projects\DirectCareAI\Scripts  # Change to STRINGS directory
