@@ -132,7 +132,7 @@ function Open-Nginx {
         Get-ChildItem -Path $nginxExtractedPath -Recurse | Format-Table Name, FullName
     }
     catch {
-        Write-Error "F.ailed to extract NGINX: $_"
+        Write-Error "Failed to extract NGINX: $_"
         exit 1  # Exit the script if extraction fails
     }
 }

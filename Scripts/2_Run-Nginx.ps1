@@ -13,9 +13,8 @@ Write-Host "Starting 2_Run-Nginx.ps1 Script" -ForegroundColor Cyan
 # 2. Run 1_Run-Nginx.ps1 in terminal
 # ---------------------------------------------------------------------------------------- 
 # Function to load .env file
-Push-Location $env:PROJECT_ROOT_DIR
 function Import-EnvFile {
-    $envFile = ".env"
+    $envFile = "../.env"
     if (Test-Path $envFile) {
         Get-Content $envFile | ForEach-Object {
             # Skip lines that are comments, empty, or don't have an =
@@ -68,17 +67,17 @@ function Test-DirectoryExists([string]$path) {
 function Set-EnvironmentVariable([string]$env) {
     if ($env:NGINX_ENV -eq "dev") {
         # Check if environment is "dev"
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): Environment set to Development." -ForegroundColor Green
+        Write-Host "Environment set to Development." -ForegroundColor Green
     }
     elseif ($env:NGINX_ENV -eq "prod") {
         # Check if environment is "prod"
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): Environment set to Production." -ForegroundColor Green
+        Write-Host "Environment set to Production." -ForegroundColor Green
     }
     else {
-        Write-Host "Line $($MyInvocation.ScriptLineNumber): Invalid environment specified. Use 'dev' or 'prod'." -ForegroundColor Red
+        Write-Host "Invalid environment specified. Use 'dev' or 'prod'." -ForegroundColor Red
         return  # Exit the function if invalid input
     }
-    Write-Host "Line $($MyInvocation.ScriptLineNumber): Please restart NGINX to apply changes." -ForegroundColor Yellow
+    Write-Host "if env variable was changed: Restart NGINX variable to apply changes." -ForegroundColor Yellow
 }
 
 # ----------------------------------------------------------------------------------------
@@ -110,20 +109,31 @@ function Restart-NginxProcess {
             return  # Exit if configuration test fails
         }
         else {
-            # Otherwise move on
             Write-Host "Configuration test passed." -ForegroundColor Green
         }
 
-        Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-s", "stop") -NoNewWindow -Wait  # Stop NGINX process
-        Write-Host "NGINX process stopped." -ForegroundColor Green
+        if (Test-Path "$logs_path/nginx.pid") {
+            $pidContent = Get-Content "$logs_path/nginx.pid" -ErrorAction SilentlyContinue
+            if ([string]::IsNullOrWhiteSpace($pidContent)) {
+                Write-Host "PID file exists but is empty. Moving on to restart NGINX." -ForegroundColor Yellow
+            }
+            else {
+                # Attempt to stop NGINX
+                Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-s", "stop") -NoNewWindow -Wait
+                Write-Host "NGINX process stopped." -ForegroundColor Green
+            }
+        }
+        else {
+            Write-Host "No PID file found. Starting NGINX." -ForegroundColor Yellow
+        }
 
-        $envArg = "-g 'env ENVIRONMENT=$($env:NGINX_ENV);'"
+        $envArg = "-g `"pid $logs_path/nginx.pid; env ENVIRONMENT=$($env:NGINX_ENV);`""
         Write-Host "Starting NGINX process with environment: $envArg" -ForegroundColor Cyan
 
-        # Start NGINX
-        Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-c", "$nginx_conf_path", $envArg) -WindowStyle Maximized -Wait  # Start NGINX with specified configuration
-
-        Write-Host "NGINX process started with ENVIRONMENT=$($env:NGINX_ENV)." -ForegroundColor Green
+        # Start NGINX with specified configuration
+        $nginxProcess = Start-Process -FilePath "$nginx_exe_path" -ArgumentList @("-c", "$nginx_conf_path", $envArg) -NoNewWindow -PassThru
+        # After the process exits, print the PID
+        Write-Host "NGINX process started with PID: $($nginxProcess.Id) and ENVIRONMENT=$($env:NGINX_ENV)." -ForegroundColor Green
     }
     catch {
         $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"  # Get the current timestamp
