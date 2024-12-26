@@ -1,22 +1,22 @@
 ## Stage 1: Build React app
 
 # Use the official Node.js runtime as the base image
-FROM node:22.12.0 AS frontend
+FROM node:22.11.0-slim AS client
 # Set working directory for frontend
 WORKDIR /app/client
-# Copy package*.json to the working directory
-COPY client/package*.json ./
-# Install dependencies for the React app
+# Copy package files to the working directory
+COPY client/package.json ./
+# Install dependencies
 RUN npm install
 # Copy the entire application files to the container and Build the React app for production
 COPY client/ . 
 # Build the React app for production
-RUN npm run build || { echo "Build failed"; exit 1; }
+RUN npm run build || { echo "Client Build failed"; exit 1; }
 
 ## Stage 2: Build FastAPI app (Backend)
 
 # Use the official latest Python 3 stable version runtime as the base image
-FROM python:3 AS backend
+FROM python:3.11-slim AS server
 # Set working directory for backend
 WORKDIR /app/server
 # Copy and install FastAPI dependencies to container
@@ -25,28 +25,24 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy FastAPI application files to the container
 COPY . .
 # Expose the FastAPI port
-EXPOSE 8000
+EXPOSE ${SERVER_PORT}
 # Command to run FastAPI app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "server.server:app", "--host", "0.0.0.0", "--port", "${SERVER_PORT}"]
 
-## Stage 3: Build PyMongo
-
-FROM mongo:latest AS database
-# install Python 3
-RUN apt-get update && apt-get install -y python3 python3-pip
-RUN apt-get -y install python3.7-dev
-RUN pip3 install pymongo
-EXPOSE 27017
-
-## Stage 4: Serve with Nginx
-
-# Use the official nginx image as the base image
-FROM nginx:alpine AS nginx
-# Copy React build files from the frontend stage to Nginx's HTML directory
-COPY --from=frontend /app/client/build /usr/share/nginx/html
-# Copy the custom Nginx configuration for reverse proxy (if you have one)
-COPY nginx/nginx.conf /app/nginx/nginx.conf 
+# Stage 4: Nginx configuration stage
+FROM nginx:alpine AS conf
+# Copy the custom Nginx configuration from the local file system (generated via Install-Nginx.ps1)
+COPY ./nginx/conf/nginx.conf /etc/nginx/nginx.conf
 # Expose Nginx port
-EXPOSE 80
+EXPOSE ${NGINX_PORT}
+# Stage 3: Final Nginx serving stage
+FROM nginx:alpine AS nginx
+# Copy the React build files from the frontend build stage
+COPY --from=client /app/client/build /usr/share/nginx/html
+# Copy the custom Nginx configuration from the 'conf' stage
+COPY --from=conf /etc/nginx/nginx.conf /etc/nginx/nginx.conf
+# Expose Nginx port
+EXPOSE ${NGINX_PORT}
+
 # Start Nginx in the background
 CMD ["nginx", "-g", "daemon off;"]

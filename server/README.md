@@ -35,13 +35,13 @@ Navigate to your project directory.
 Create the virtual environment:
 
 ```bash
-python -m venv server\.venv
+python -m venv server/.venv
 ```
 
 Activate the virtual environment:
 
 ```bash
-.\server\.venv\Scripts\activate
+./server/.venv/Scripts/activate
 ```
 
 You should now see (venv) at the start of your command prompt.
@@ -86,7 +86,7 @@ For Windows
 Run the following command in PowerShell or Command Prompt:
 
 ```bash
-.\start.ps1
+./start.ps1
 ```
 
 For Linux/macOS

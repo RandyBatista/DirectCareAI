@@ -12,6 +12,8 @@ node_modules
 *.so
 
 # Distribution / packaging
+nginx/
+nginx.conf
 .Python
 build/
 develop-eggs/
