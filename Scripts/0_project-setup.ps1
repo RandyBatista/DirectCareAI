@@ -30,11 +30,12 @@ if (-not (Test-Path $envFile)) {
   Add-Content -Path $envFile -Value "MONGO_INITDB_PWD=Define the path for MongoDB password storage"
   Add-Content -Path $envFile -Value "MONGO_URI=Add your Mongo connection string"
   
-
   Add-Content -Path $envFile -Value "# TODO: Defaulted to 'dev': Change this to 'PROD' for production environment" 
   Add-Content -Path $envFile -Value "CLIENT_ENV=dev"
   Add-Content -Path $envFile -Value "SERVER_ENV=dev"
   Add-Content -Path $envFile -Value "NGINX_ENV=dev"
+
+  Add-Content -Path $envFile -Value "PROJECT_ROOT_DIR=Full path to DirectCareAI project directory"
 
   Add-Content -Path $envFile -Value "# TODO: Change PORTS as needed" 
   Add-Content -Path $envFile -Value "CLIENT_HOST=http://localhost:3000" 
