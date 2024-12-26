@@ -94,6 +94,7 @@ Set-Location ./server  # Navigate to the server directory
 # Create a Python virtual environment and install required dependencies
 Write-Host "Setting up Python virtual environment for the server..." -ForegroundColor Cyan
 python -m venv venv  # Create a virtual environment named 'venv'
+.\venv\Scripts\activate
 pip install -r requirements.txt  # Install required Python packages
 
 Set-Location ..  # Go back to the root directory
