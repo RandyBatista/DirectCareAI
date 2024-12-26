@@ -72,7 +72,7 @@ else {
 }
 
 Write-Host "Starting FastAPI server" -ForegroundColor cyan
-Start-Process -NoNewWindow -FilePath uvicorn -ArgumentList "server:app", "--reload"
+Start-Process -NoNewWindow -FilePath uvicorn -ArgumentList "server:app --reload"
 
 Write-Host "Opening FastAPI server" -ForegroundColor cyan
 $url = "$env:SERVER_HOST/docs"
