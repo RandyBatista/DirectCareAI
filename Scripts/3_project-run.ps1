@@ -62,14 +62,6 @@ Set-Location ..
 # ----------------------------------------------------------------------------------------
 
 Set-Location .\server
-Write-Host "Activating Python virtual environment" -ForegroundColor cyan
-$venvPath = ".\venv\Scripts\activate"
-if (Test-Path $venvPath) {
-    .\venv\Scripts\activate
-}
-else {
-    Write-Host "Virtual environment not found at $venvPath" -ForegroundColor Red
-}
 
 Write-Host "Starting FastAPI server" -ForegroundColor cyan
 Start-Process -NoNewWindow -FilePath uvicorn -ArgumentList "server:app --reload"
