@@ -27,7 +27,8 @@
 		"docker:restart": "npm run docker:down && npm run docker:build:start",
 		"docker:clean": "docker-compose -f ../docker-compose.yml down && docker system prune -af",
 		"docker:logs": "docker-compose -f ../docker-compose.yml logs -f",
-		"nginx:test": "./../nginx/conf/nginx.exe -t"
+		"nginx:start": "npm run nginx:check && npm run nginx:platform-start",
+		"nginx:test": "npm run nginx:platform-test"
 	},
 	"eslintConfig": {
 		"extends": [

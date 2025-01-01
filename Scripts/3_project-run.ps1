@@ -50,7 +50,6 @@ Set-Location .\client
 
 Write-Host "Stopping ports and building for production" -ForegroundColor cyan
 npm run stop:client:ports  
-npm run build  
 
 Set-Location ..
 
