@@ -11,7 +11,9 @@ Write-Host "Starting 1_Install-Nginx.ps1 Script" -ForegroundColor Cyan
 # 2. Run ./0_Install-Nginx.ps1 in terminal
 # ---------------------------------------------------------------------------------------- 
 # Function to load .env file
-Set-Location .. 
+
+Set-Location ..
+
 function Import-EnvFile {
     $envFile = ".env"
     if (Test-Path $envFile) {
@@ -37,13 +39,14 @@ function Import-EnvFile {
     }
 }
 Import-EnvFile
+
 # ----------------------------------------------------------------------------------------
 # STEP 1: Define Variables for NGINX Version and Download Details
 #        TODO: Set the nginx_version to the nginx version you want to download
 #        TODO: Set nginx_directory_path to your project root directory     
 # ----------------------------------------------------------------------------------------
 
-$nginx_version = "1.26.2"
+$nginx_version = "1.27.3"
 $nginx_url = "https://nginx.org/download/nginx-$nginx_version.zip" # URL to download the NGINX ZIP file
 $nginx_download_path = "$HOME/Downloads/nginx-$nginx_version.zip"  # Local path for downloaded ZIP file
 

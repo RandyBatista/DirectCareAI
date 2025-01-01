@@ -53,10 +53,10 @@ else {
 }
 
 # ---------------------------------------------------------------------------------------- 
-# STEP 2: Clean Up Client and Docker
-# 2.1 Remove node_modules and build folders
-# 2.2 Remove up docker images
-# 2.3Build the Docker image for the project
+# STEP 1: Clean Up Client and Docker
+# 1.1 Remove node_modules and build folders
+# 1.2 Remove up docker images
+# 1.3Build the Docker image for the project
 # ---------------------------------------------------------------------------------------- 
 
 Set-Location ./client 
@@ -66,14 +66,7 @@ npm run docker:clean
 Set-Location ..
 
 # ---------------------------------------------------------------------------------------- 
-# STEP 3: Create and Build single Docker image
-# ---------------------------------------------------------------------------------------- 
-
-Write-Host "Building Single Docker image..." -ForegroundColor Cyan
-docker build -t dc_ai_chatbot:1.0 .
-
-# ---------------------------------------------------------------------------------------- 
-# STEP 4: Install npm dependencies for the client 
+# STEP 2: Install npm dependencies for the client 
 # Install npm dependencies for the client-side application
 # ---------------------------------------------------------------------------------------- 
 
@@ -81,9 +74,23 @@ Set-Location ./client
 
 Write-Host "Installing npm dependencies for the client..." -ForegroundColor Cyan
 npm install  # Install npm dependencies
+npm run build 
 npm run docker:build:start  # Start Docker container for the client
-
 Set-Location ..  # Return to the root directory
+
+# ----------------------------------------------------------------------------------------
+# STEP 3: Run Nginx installation  
+# ----------------------------------------------------------------------------------------
+
+Set-Location ./Scripts
+./1_Install-Nginx
+
+# ---------------------------------------------------------------------------------------- 
+# STEP 4: Create and Build single Docker image
+# ---------------------------------------------------------------------------------------- 
+
+Write-Host "Building Single Docker image..." -ForegroundColor Cyan
+docker build -t dc_ai_chatbot:1.0 .
 
 # ---------------------------------------------------------------------------------------- 
 # STEP 5: Set up Python virtual environment for the server 
@@ -121,9 +128,9 @@ else {
 # # TODO: For all in one run installation. UNCOMMENT the following
 # Set-Location ./Scripts
 
-# if (Test-Path -Path "./1_Install-Nginx.ps1") {
+# if (Test-Path -Path "./2_Run-Nginx.ps1") {
 #     try {
-#         ./1_Install-Nginx.ps1
+#         ./2_Run-Nginx.ps1
 #     } catch {
 #         Write-Host "Line $($MyInvocation.ScriptLineNumber): Error running Run-Nginx.ps1: $_" -ForegroundColor Red
 #     }
